@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockStorage is a mock implementation of storage.Storage
 type MockStorage struct {
 	mock.Mock
 }
@@ -120,24 +119,19 @@ func TestUrlService_Shorten_NewURL(t *testing.T) {
 			mockStorage := new(MockStorage)
 			service := NewUrlService(mockStorage)
 
-			// Setup GetShortenId expectation
 			mockStorage.On("GetShortenId", tt.originUrl).Return("", tt.getShortenIdError)
 
 			if tt.getShortenIdError == storage.ErrNotFound {
-				// Setup GetNextId expectation
 				if tt.getNextIdError != nil {
 					mockStorage.On("GetNextId").Return(int64(0), tt.getNextIdError)
 				} else {
 					mockStorage.On("GetNextId").Return(tt.nextId, nil)
 
-					// Only expect SaveId if GetNextId succeeds
 					if tt.saveError != nil {
-						// We need to actually encode the ID to match what the service will do
 						enc := encoder.NewBase62Encoder()
 						encodedId := enc.Encode10WithPadding(tt.nextId, 10)
 						mockStorage.On("SaveId", tt.originUrl, encodedId).Return(tt.saveError)
 					} else {
-						// For success case, we can use mock.Anything or specific encoded value
 						enc := encoder.NewBase62Encoder()
 						encodedId := enc.Encode10WithPadding(tt.nextId, 10)
 						mockStorage.On("SaveId", tt.originUrl, encodedId).Return(nil)
